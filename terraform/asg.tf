@@ -93,16 +93,44 @@ resource "aws_launch_template" "monitoring" {
   # User Data Script for bootstrapping (installs Ansible, runs playbook locally)
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              # Install Git and Ansible-core
-              dnf install -y git ansible-core
+              # Log all output to a file for troubleshooting
+              exec > /var/log/user-data-bootstrap.log 2>&1
+              set -ex
+
+              echo "Starting bootstrap script..."
+
+              # Wait for network connectivity (max 1 minute)
+              for i in {1..30}; do
+                if curl -s -I https://github.com | grep -q "HTTP/"; then
+                  echo "Network is up and ready."
+                  break
+                fi
+                echo "Waiting for network connectivity..."
+                sleep 2
+              done
+
+              # Install Git and Ansible-core with retries
+              echo "Installing packages..."
+              for i in {1..5}; do
+                dnf install -y git ansible-core && break
+                echo "Package installation failed, retrying in 5 seconds..."
+                sleep 5
+              done
 
               # Bootstrap via Ansible Local/Pull
               mkdir -p /opt/bootstrap
               
-              # Clone git repo (this repository will be set via variables in Jenkins/Terraform)
-              git clone -b ${var.git_repo_branch} ${var.git_repo_url} /opt/bootstrap
+              # Clone git repo with retries
+              echo "Cloning repository..."
+              for i in {1..5}; do
+                git clone -b ${var.git_repo_branch} ${var.git_repo_url} /opt/bootstrap && break
+                echo "Git clone failed, cleaning up and retrying in 5 seconds..."
+                rm -rf /opt/bootstrap/* /opt/bootstrap/.git
+                sleep 5
+              done
               
               # Execute Ansible locally
+              echo "Running Ansible playbook..."
               cd /opt/bootstrap/ansible
               ansible-playbook -i "localhost," playbooks/monitoring.yml --connection=local --extra-vars "aws_default_region=${var.aws_region}"
               EOF

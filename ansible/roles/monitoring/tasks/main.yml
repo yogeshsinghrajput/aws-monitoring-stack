@@ -89,6 +89,7 @@
     name: prometheus
     state: started
     enabled: yes
+    daemon_reload: yes
 
 
 # 6. INSTALL GRAFANA NATIVELY (via Official Yum Repo)

@@ -111,6 +111,7 @@
     name: node_exporter
     state: started
     enabled: yes
+    daemon_reload: yes
 
 # NGINX PROMETHEUS EXPORTER INSTALLATION
 - name: Download Nginx Prometheus Exporter binary
@@ -160,5 +161,6 @@
     name: nginx_exporter
     state: started
     enabled: yes
+    daemon_reload: yes
 
 
