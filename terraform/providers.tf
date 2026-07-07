@@ -10,7 +10,7 @@ terraform {
   backend "s3" {
     bucket  = "monitoring-stack-dev-state-542650110875"
     key     = "monitoring/state/terraform.tfstate"
-    region  = "ap-south-1"
+    region  = "us-east-1"
     encrypt = true
   }
 }

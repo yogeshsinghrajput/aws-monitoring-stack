@@ -5,6 +5,7 @@ pipeline {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform action to perform')
         string(name: 'AWS_REGION', defaultValue: 'ap-south-1', description: 'AWS Region to deploy to')
         string(name: 'TERRAFORM_STATE_BUCKET', defaultValue: 'monitoring-stack-dev-state-542650110875', description: 'S3 bucket for Terraform State storage')
+        string(name: 'TERRAFORM_STATE_REGION', defaultValue: 'us-east-1', description: 'AWS Region for Terraform State S3 bucket')
         string(name: 'SSH_KEY_CREDENTIAL_ID', defaultValue: 'monitoring-ssh-key', description: 'Jenkins credential ID for the EC2 SSH private key')
         string(name: 'EC2_KEY_PAIR_NAME', defaultValue: 'new_pair1', description: 'Name of the EC2 Key Pair in AWS')
         string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/yogeshsinghrajput/aws-monitoring-stack.git', description: 'Git repository containing this code (for ASG bootstrap)')
@@ -22,7 +23,7 @@ pipeline {
         stage('Initialize & Validate') {
             steps {
                 dir("${env.TF_DIR}") {
-                    sh "terraform init -reconfigure -backend-config='bucket=${params.TERRAFORM_STATE_BUCKET}' -backend-config='region=${params.AWS_REGION}'"
+                    sh "terraform init -reconfigure -backend-config='bucket=${params.TERRAFORM_STATE_BUCKET}' -backend-config='region=${params.TERRAFORM_STATE_REGION}'"
                     sh 'terraform validate'
                 }
             }
