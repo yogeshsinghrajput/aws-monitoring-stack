@@ -1,0 +1,149 @@
+---
+# 1. CREATE SYSTEM GROUPS AND USERS
+- name: Create prometheus group
+  group:
+    name: prometheus
+    system: yes
+    state: present
+
+- name: Create prometheus user
+  user:
+    name: prometheus
+    group: prometheus
+    system: yes
+    shell: /sbin/nologin
+    create_home: no
+    state: present
+
+
+
+# 3. INSTALL PROMETHEUS NATIVELY
+- name: Create Prometheus config and data directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Download Prometheus binary
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/prometheus.tar.gz"
+
+- name: Extract Prometheus binary
+  unarchive:
+    src: "/tmp/prometheus.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Copy Prometheus binaries to /usr/local/bin
+  copy:
+    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+  loop:
+    - prometheus
+    - promtool
+
+- name: Copy Prometheus helper directories to /etc/prometheus
+  copy:
+    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/etc/prometheus/{{ item }}"
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+  loop:
+    - consoles
+    - console_libraries
+
+
+
+- name: Template Prometheus configuration file
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+  notify: Restart Prometheus
+
+- name: Template Prometheus systemd unit file
+  template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload Systemd
+
+- name: Start and Enable Prometheus Service
+  systemd:
+    name: prometheus
+    state: started
+    enabled: yes
+
+
+# 6. INSTALL GRAFANA NATIVELY (via Official Yum Repo)
+- name: Add Grafana official YUM repository
+  copy:
+    content: |
+      [grafana]
+      name=grafana
+      baseurl=https://rpm.grafana.com
+      repo_gpgcheck=1
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://rpm.grafana.com/gpg.key
+      sslverify=1
+      sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+    dest: /etc/yum.repos.d/grafana.repo
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Grafana OSS
+  dnf:
+    name: grafana
+    state: present
+
+
+
+- name: Template Grafana configuration file (grafana.ini)
+  template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: root
+    group: grafana
+    mode: '0640'
+  notify: Restart Grafana
+
+- name: Create Grafana provisioning datasources directory
+  file:
+    path: /etc/grafana/provisioning/datasources
+    state: directory
+    owner: root
+    group: grafana
+    mode: '0755'
+
+- name: Provision Prometheus and CloudWatch data sources in Grafana
+  template:
+    src: datasources.yaml.j2
+    dest: /etc/grafana/provisioning/datasources/datasources.yaml
+    owner: root
+    group: grafana
+    mode: '0640'
+  notify: Restart Grafana
+
+- name: Start and Enable Grafana Service
+  systemd:
+    name: grafana-server
+    state: started
+    enabled: yes
