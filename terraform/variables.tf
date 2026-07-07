@@ -25,7 +25,7 @@ variable "private_subnet_cidrs" {
 variable "key_name" {
   description = "Name of the EC2 Key Pair to associate with instances"
   type        = string
-  default     = "new_pair1"
+  default     = "shiv.pem"
 }
 
 variable "bastion_instance_type" {

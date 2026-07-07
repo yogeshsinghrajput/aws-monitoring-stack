@@ -7,7 +7,7 @@ pipeline {
         string(name: 'TERRAFORM_STATE_BUCKET', defaultValue: 'monitoring-stack-dev-state-542650110875', description: 'S3 bucket for Terraform State storage')
         string(name: 'TERRAFORM_STATE_REGION', defaultValue: 'us-east-1', description: 'AWS Region for Terraform State S3 bucket')
         string(name: 'SSH_KEY_CREDENTIAL_ID', defaultValue: 'monitoring-ssh-key', description: 'Jenkins credential ID for the EC2 SSH private key')
-        string(name: 'EC2_KEY_PAIR_NAME', defaultValue: 'new_pair1', description: 'Name of the EC2 Key Pair in AWS')
+        string(name: 'EC2_KEY_PAIR_NAME', defaultValue: 'shiv.pem', description: 'Name of the EC2 Key Pair in AWS')
         string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/yogeshsinghrajput/aws-monitoring-stack.git', description: 'Git repository containing this code (for ASG bootstrap)')
         string(name: 'GIT_REPO_BRANCH', defaultValue: 'main', description: 'Git branch to pull for ASG bootstrap')
     }
