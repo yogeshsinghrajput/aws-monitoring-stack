@@ -93,8 +93,7 @@ resource "aws_launch_template" "monitoring" {
   # User Data Script for bootstrapping (installs Ansible, runs playbook locally)
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              # Update packages and install Git and Ansible-core
-              dnf update -y
+              # Install Git and Ansible-core
               dnf install -y git ansible-core
 
               # Bootstrap via Ansible Local/Pull
