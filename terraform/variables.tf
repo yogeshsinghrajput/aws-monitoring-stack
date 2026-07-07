@@ -37,7 +37,7 @@ variable "bastion_instance_type" {
 variable "monitoring_instance_type" {
   description = "EC2 instance type for the Grafana/Prometheus servers"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "git_repo_url" {
