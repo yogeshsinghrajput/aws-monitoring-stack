@@ -105,13 +105,15 @@ bastion-host ansible_host=${bastionPublicIp} ansible_user=ec2-user
 
     post {
         always {
-            node {
-                // Clean up temporary plan files
-                dir("${env.TF_DIR}") {
-                    sh 'rm -f tfplan'
-                }
-                dir("${env.ANSIBLE_DIR}") {
-                    sh 'rm -f inventory.ini'
+            script {
+                node {
+                    // Clean up temporary plan files
+                    dir("${env.TF_DIR}") {
+                        sh 'rm -f tfplan'
+                    }
+                    dir("${env.ANSIBLE_DIR}") {
+                        sh 'rm -f inventory.ini'
+                    }
                 }
             }
         }
